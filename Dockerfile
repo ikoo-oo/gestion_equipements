@@ -37,7 +37,7 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
 
-# ✅ FIXED: removed db:seed from here (run it once manually or use a seeder guard)
+# Remove db:seed from CMD — run it once manually instead
 CMD sh -c "php artisan config:cache && \
            php artisan route:cache && \
            php artisan view:cache && \
