@@ -37,9 +37,10 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
 
-# Option A: Remove seeding from CMD entirely (run it manually once)
+# ✅ FIXED: removed db:seed from here (run it once manually or use a seeder guard)
 CMD sh -c "php artisan config:cache && \
            php artisan route:cache && \
            php artisan view:cache && \
+           php artisan storage:link && \
            php artisan migrate --force && \
            apache2-foreground"
