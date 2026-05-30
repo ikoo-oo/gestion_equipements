@@ -37,10 +37,9 @@ RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
 
-# Cache configs at RUNTIME (not build time), then migrate, seed, start
+# Option A: Remove seeding from CMD entirely (run it manually once)
 CMD sh -c "php artisan config:cache && \
            php artisan route:cache && \
            php artisan view:cache && \
            php artisan migrate --force && \
-           php artisan db:seed --force && \
            apache2-foreground"
