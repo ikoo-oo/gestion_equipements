@@ -1,43 +1,35 @@
 FROM php:8.3-apache
 
-# Install system dependencies + Node.js 20
-RUN apt-get update && apt-get install -y \
-    libzip-dev unzip git curl \
-    libpng-dev libjpeg-dev libfreetype6-dev \
+# Install system deps (faster with --no-install-recommends)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libzip-dev libpng-dev libjpeg-dev libfreetype6-dev \
+    unzip git curl \
     && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y nodejs \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql zip gd bcmath opcache \
+    && docker-php-ext-install -j$(nproc) pdo pdo_mysql zip gd bcmath opcache \
     && a2enmod rewrite
 
-# Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 COPY . .
 
-# Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Install JS dependencies and build Vite assets
 RUN npm install && npm run build
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 777 /var/www/html/storage \
-    && chmod -R 775 /var/www/html/bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R 777 storage \
+    && chmod -R 775 bootstrap/cache
 
-# Point Apache to Laravel's public/ folder
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/conf-available/*.conf
-
-# Fix Apache ServerName warning
-RUN echo "ServerName localhost" >> /etc/apache2/apache2.conf
+    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/conf-available/*.conf \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
 
 EXPOSE 80
 
-# Remove db:seed from CMD — run it once manually instead
 CMD sh -c "php artisan config:cache && \
            php artisan route:cache && \
            php artisan view:cache && \
