@@ -1,5 +1,8 @@
 FROM php:8.2-apache
 
+# Installe unzip et les dépendances système
+RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
+
 # Installe les extensions PHP
 RUN docker-php-ext-install pdo pdo_mysql
 
