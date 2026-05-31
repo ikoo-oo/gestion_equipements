@@ -3,8 +3,8 @@ FROM php:8.2-apache
 # Installe unzip et les dépendances système
 RUN apt-get update && apt-get install -y unzip curl && rm -rf /var/lib/apt/lists/*
 
-# Installe Node.js (pour compiler les assets)
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+# Installe Node.js 22 (version requise par Vite)
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
     apt-get install -y nodejs && \
     rm -rf /var/lib/apt/lists/*
 
